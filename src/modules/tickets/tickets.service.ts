@@ -1,4 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateTicketDto, CurrentUser } from './dto/create-ticket.dto';
 import {
   AssignTicketDto,
@@ -23,85 +29,45 @@ export class TicketsService {
   // 1. CREATE TICKET
   // ==========================================
   async createTicket(data: CreateTicketDto, currentUser: CurrentUser) {
-    // ----------------------------------------------------
-    // EDGE CASE 1: Basic Input Validation
-    // (Ideally handled by a library like Zod/Joi in the route handler,
-    // but good to have a safety net in the service)
-    // ----------------------------------------------------
-    if (!data.title || data.title.trim().length === 0) {
-      throw new Error('Ticket title is required.');
-    }
-    if (!data.summary || data.summary.trim().length === 0) {
-      throw new Error('Ticket summary is required.');
-    }
-    if (!Object.values(Department).includes(data.department)) {
-      throw new Error('Invalid department specified.');
-    }
-
-    // ----------------------------------------------------
-    // EDGE CASE 2: Validate the User
-    // Just because they have a JWT token doesn't mean they
-    // still exist in the DB or are currently active.
-    // ----------------------------------------------------
+    // 1. Business Logic: Is the user active?
     const user = await this.prisma.user.findUnique({
       where: { id: currentUser.id },
-      select: { isActive: true }, // Only fetch what we need
+      select: { isActive: true },
     });
 
-    if (!user) {
-      throw new Error('User associated with this request does not exist.');
-    }
-
-    if (!user.isActive) {
-      throw new Error(
-        'Your account is currently inactive. You cannot create tickets.',
+    if (!user || !user.isActive) {
+      throw new ForbiddenException(
+        'Your account is inactive. You cannot create tickets.',
       );
     }
 
-    // ----------------------------------------------------
-    // EDGE CASE 3: Rate Limiting / Spam Prevention (Optional but recommended)
-    // Prevent a user from creating 100 tickets in 1 minute.
-    // ----------------------------------------------------
+    // 2. Business Logic: Rate Limiting
+    // How many requests can be sent at a time
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const recentTicketsCount = await this.prisma.ticket.count({
+    const recentTickets = await this.prisma.ticket.count({
       where: {
         createdById: currentUser.id,
         createdAt: { gte: fiveMinutesAgo },
       },
     });
 
-    if (recentTicketsCount >= 5) {
-      throw new Error(
-        'You are creating tickets too quickly. Please wait a few minutes.',
+    if (recentTickets >= 5) {
+      throw new BadRequestException(
+        'Creating tickets too quickly. Please wait.',
       );
     }
 
-    // ----------------------------------------------------
-    // HAPPY PATH: Create the ticket
-    // ----------------------------------------------------
-    try {
-      const newTicket = await this.prisma.ticket.create({
-        data: {
-          title: data.title.trim(),
-          summary: data.summary.trim(),
-          department: data.department,
-          priority: data.priority || TicketPriority.LOW,
-          imageUrl: data.imageUrl,
-          createdById: currentUser.id,
-        },
-        include: {
-          createdBy: { select: { name: true, email: true, role: true } },
-        },
-      });
-
-      return newTicket;
-    } catch (error) {
-      // EDGE CASE 4: Catching unexpected database errors
-      console.error('[TicketService.createTicket] Database Error:', error);
-      throw new Error(
-        'An unexpected error occurred while creating the ticket. Please try again later.',
-      );
-    }
+    // 3. Database Operation
+    return this.prisma.ticket.create({
+      data: {
+        title: data.title, // Guaranteed to be a valid, non-empty string by DTO
+        summary: data.summary, // Guaranteed to be a valid, non-empty string by DTO
+        department: data.department, // Guaranteed to be a valid enum by DTO
+        priority: data.priority || TicketPriority.LOW,
+        imageUrl: data.imageUrl,
+        createdById: currentUser.id,
+      },
+    });
   }
 
   // ==========================================
@@ -111,30 +77,23 @@ export class TicketsService {
     currentUser: CurrentUser,
     filters: GetTicketsFilterDto = {},
   ) {
-    // ----------------------------------------------------
-    // EDGE CASE 1: Pagination (Performance & DoS Protection)
+    // Pagination (Performance & DoS Protection)
     // Never allow fetching ALL tickets at once.
     // Default to page 1, 10 items. Cap max items at 50.
-    // ----------------------------------------------------
-    const page = Math.max(1, filters.page || 1);
-    const limit = Math.min(50, Math.max(1, filters.limit || 10));
+    const page = filters.page || 1;
+    const limit = Math.min(50, filters.limit || 10);
     const skip = (page - 1) * limit;
 
-    // ----------------------------------------------------
-    // FIXING ESLINT: Strict typing for the Where Clause
     // This guarantees we only query valid schema fields.
-    // ----------------------------------------------------
     const whereClause: Prisma.TicketWhereInput = {};
 
     // Apply basic user-requested filters
     if (filters.status) whereClause.status = filters.status;
     if (filters.priority) whereClause.priority = filters.priority;
 
-    // ----------------------------------------------------
-    // EDGE CASE 2: Strict Role-Based Access Control (RBAC)
+    // Strict Role-Based Access Control (RBAC)
     // We must ensure that a user passing `department=IT`
     // in the URL cannot bypass their role restrictions.
-    // ----------------------------------------------------
     switch (currentUser.role) {
       case Role.EMPLOYEE:
         // Employees CANNOT see other people's tickets, period.
@@ -143,40 +102,28 @@ export class TicketsService {
         break;
 
       case Role.HR:
-        // HR sees their own tickets OR any ticket in the HR department
-        if (filters.department) {
-          if (filters.department === Department.HR) {
-            whereClause.department = Department.HR;
-          } else {
-            // EDGE CASE 3: If HR asks for IT tickets, they only see the ones THEY created.
-            whereClause.department = filters.department;
-            whereClause.createdById = currentUser.id;
-          }
-        } else {
-          whereClause.OR = [
-            { department: Department.HR },
-            { createdById: currentUser.id },
-          ];
-        }
-        break;
+      case Role.IT: {
+        // HR and IT sees their own tickets OR
+        // any ticket in the HR and IT department respectively
+        const targetDept =
+          currentUser.role === Role.HR ? Department.HR : Department.IT;
 
-      case Role.IT:
-        // IT sees their own tickets OR any ticket in the IT department
         if (filters.department) {
-          if (filters.department === Department.IT) {
-            whereClause.department = Department.IT;
+          if (filters.department === targetDept) {
+            whereClause.department = targetDept;
           } else {
-            // If IT asks for HR tickets, they only see the ones THEY created.
+            // If they ask for the OTHER department, they only see ones they created
             whereClause.department = filters.department;
             whereClause.createdById = currentUser.id;
           }
         } else {
           whereClause.OR = [
-            { department: Department.IT },
+            { department: targetDept },
             { createdById: currentUser.id },
           ];
         }
         break;
+      }
 
       case Role.ADMIN:
         // Admins have no forced restrictions. Apply department filter if requested.
@@ -184,9 +131,7 @@ export class TicketsService {
         break;
     }
 
-    // ----------------------------------------------------
     // DB CALL: Use $transaction to run count and fetch in parallel
-    // ----------------------------------------------------
     try {
       const [tickets, totalCount] = await this.prisma.$transaction([
         this.prisma.ticket.findMany({
@@ -213,7 +158,9 @@ export class TicketsService {
       };
     } catch (error) {
       console.error('[TicketService.getTickets] Database Error:', error);
-      throw new Error('Failed to fetch tickets. Please try again later.');
+      throw new InternalServerErrorException(
+        'Failed to fetch tickets. Please try again later.',
+      );
     }
   }
 
@@ -225,12 +172,10 @@ export class TicketsService {
     data: AssignTicketDto,
     currentUser: CurrentUser,
   ) {
-    // ----------------------------------------------------
-    // EDGE CASE 1: Basic Role Check
+    // Basic Role Check
     // Employees cannot assign tickets at all.
-    // ----------------------------------------------------
     if (currentUser.role === Role.EMPLOYEE) {
-      throw new Error('Employees do not have permission to assign tickets.');
+      throw new ForbiddenException('Employees cannot assign tickets.');
     }
 
     // Fetch the ticket to check its current state and department
@@ -238,54 +183,46 @@ export class TicketsService {
       where: { id: ticketId },
     });
 
-    if (!ticket) throw new Error('Ticket not found.');
+    if (!ticket) throw new NotFoundException('Ticket not found.');
 
     // Prevent re-assigning resolved tickets
     if (ticket.status === TicketStatus.RESOLVED) {
-      throw new Error(
-        'Cannot reassign a resolved ticket. Please reopen it first.',
-      );
+      throw new BadRequestException('Cannot reassign a resolved ticket.');
     }
 
-    // ----------------------------------------------------
-    // EDGE CASE 2: Validate the Assignee
+    // Validate the Assignee
     // Ensure the person being assigned exists, is active,
     // and belongs to the correct department.
-    // ----------------------------------------------------
     const assignee = await this.prisma.user.findUnique({
       where: { id: data.assigneeId },
       select: { role: true, isActive: true },
     });
 
-    if (!assignee) throw new Error('Target assignee does not exist.');
-    if (!assignee.isActive)
-      throw new Error('Cannot assign ticket to an inactive user.');
-
-    // HR tickets must go to HR or Admin. IT tickets must go to IT or Admin.
+    if (!assignee || !assignee.isActive) {
+      throw new BadRequestException('Target assignee is invalid or inactive.');
+    }
     if (
       ticket.department === Department.HR &&
       assignee.role !== Role.HR &&
       assignee.role !== Role.ADMIN
     ) {
-      throw new Error('HR tickets can only be assigned to HR personnel.');
+      throw new BadRequestException('HR tickets must be assigned to HR.');
     }
     if (
       ticket.department === Department.IT &&
       assignee.role !== Role.IT &&
       assignee.role !== Role.ADMIN
     ) {
-      throw new Error('IT tickets can only be assigned to IT personnel.');
+      throw new BadRequestException('IT tickets must be assigned to IT.');
     }
 
-    // ----------------------------------------------------
     // DB CALL: Update Assignment and Auto-Shift Status
-    // ----------------------------------------------------
     try {
       return await this.prisma.ticket.update({
         where: { id: ticketId },
         data: {
           assignedToId: data.assigneeId,
-          // EDGE CASE 3: Auto-transition status
+          // Auto-transition status
           // If the ticket was OPEN, picking it up should move it to IN_PROGRESS
           status:
             ticket.status === TicketStatus.OPEN
@@ -298,7 +235,7 @@ export class TicketsService {
       });
     } catch (error) {
       console.error('[TicketService.assignTicket] Database Error:', error);
-      throw new Error('Failed to assign ticket.');
+      throw new InternalServerErrorException('Failed to assign ticket.');
     }
   }
 
@@ -314,29 +251,33 @@ export class TicketsService {
       where: { id: ticketId },
     });
 
-    if (!ticket) throw new Error('Ticket not found.');
+    if (!ticket) throw new NotFoundException('Ticket not found.');
 
-    // ----------------------------------------------------
-    // EDGE CASE 4: State Machine Logic
-    // You shouldn't be able to resolve a ticket that
-    // nobody has investigated (i.e., no assignee).
-    // ----------------------------------------------------
-    if (data.status === TicketStatus.RESOLVED && !ticket.assignedToId) {
-      throw new Error(
+    // State Machine Logic
+    // Agents shouldn't be able to resolve a ticket that nobody has investigated.
+    // However, the original creator CAN cancel/resolve their own unassigned ticket.
+    if (
+      data.status === TicketStatus.RESOLVED &&
+      !ticket.assignedToId &&
+      currentUser.id !== ticket.createdById
+    ) {
+      throw new BadRequestException(
         'Cannot resolve a ticket that has not been assigned to anyone.',
       );
     }
 
-    // ----------------------------------------------------
-    // EDGE CASE 5: Strict Update Permissions
-    // ----------------------------------------------------
+    // Strict Update Permissions
     if (currentUser.role === Role.EMPLOYEE) {
-      // Employees can only close their OWN tickets (e.g., "Nevermind, I fixed it!")
+      // Employees can only close their OWN tickets
       if (ticket.createdById !== currentUser.id) {
-        throw new Error('You do not have permission to modify this ticket.');
+        throw new ForbiddenException(
+          'You do not have permission to modify this ticket.',
+        );
       }
       if (data.status !== TicketStatus.RESOLVED) {
-        throw new Error('Employees can only resolve/close their own tickets.');
+        throw new ForbiddenException(
+          'Employees can only resolve/close their own tickets.',
+        );
       }
     } else if (currentUser.role === Role.HR || currentUser.role === Role.IT) {
       // Agents can only update tickets in their specific department
@@ -344,16 +285,14 @@ export class TicketsService {
         (currentUser.role === Role.HR && ticket.department !== Department.HR) ||
         (currentUser.role === Role.IT && ticket.department !== Department.IT)
       ) {
-        throw new Error(
+        throw new ForbiddenException(
           `You do not have permission to update ${ticket.department} tickets.`,
         );
       }
     }
     // Admins bypass the above checks.
 
-    // ----------------------------------------------------
     // DB CALL: Update Status
-    // ----------------------------------------------------
     try {
       return await this.prisma.ticket.update({
         where: { id: ticketId },
@@ -364,7 +303,7 @@ export class TicketsService {
         '[TicketService.updateTicketStatus] Database Error:',
         error,
       );
-      throw new Error('Failed to update ticket status.');
+      throw new InternalServerErrorException('Failed to update ticket status.');
     }
   }
 }
