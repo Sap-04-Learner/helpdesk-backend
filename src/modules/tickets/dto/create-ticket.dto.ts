@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
   IsEnum,
   IsNotEmpty,
@@ -6,7 +5,7 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator';
-import { Department, Role, TicketPriority } from 'src/generated/prisma/client';
+import { Department, TicketPriority } from 'src/generated/prisma/client';
 
 // Types for our service inputs
 export class CreateTicketDto {
@@ -28,10 +27,4 @@ export class CreateTicketDto {
   @IsOptional()
   @IsUrl({}, { message: 'Image must be a valid URL' })
   imageUrl?: string;
-}
-
-// User object passed from your Auth Middleware
-export interface CurrentUser {
-  id: string;
-  role: Role;
 }
