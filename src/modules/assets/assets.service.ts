@@ -1,26 +1,180 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from '../../prisma.service';
+import { AssetStatus } from 'src/generated/prisma/enums';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
+import { AssignAssetDto } from './dto/assign-asset.dto';
+import { FilterAssetDto } from './dto/filter-asset.dto';
+import { Prisma } from 'src/generated/prisma/client';
+
+// DRY & Secure: Never return passwords in related queries
+const userSelect = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+};
 
 @Injectable()
 export class AssetsService {
-  create(createAssetDto: CreateAssetDto) {
-    return 'This action adds a new asset';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(dto: CreateAssetDto) {
+    if (dto.assignedToId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: dto.assignedToId },
+      });
+      if (!user) throw new BadRequestException('assignedToId user not found');
+    }
+
+    return this.prisma.asset.create({
+      data: {
+        serialNumber: dto.serialNumber,
+        assetName: dto.assetName,
+        assetType: dto.assetType,
+        assignedToId: dto.assignedToId ?? null,
+        assignedDate: dto.assignedToId ? new Date() : null,
+        assetStatus: dto.assignedToId
+          ? AssetStatus.ASSIGNED
+          : (dto.assetStatus ?? AssetStatus.AVAILABLE),
+      },
+      include: { assignedTo: { select: userSelect } },
+    });
   }
 
-  findAll() {
-    return `This action returns all assets`;
+  // Moved from UsersModule
+  async getMyAssets(userId: string) {
+    return this.prisma.asset.findMany({
+      where: { assignedToId: userId },
+      include: { assignedTo: { select: userSelect } },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} asset`;
+  async findAll(filter: FilterAssetDto) {
+    const {
+      assetStatus,
+      assetType,
+      assignedToId,
+      page = 1,
+      limit = 10,
+    } = filter;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.AssetWhereInput = {
+      ...(assetStatus ? { assetStatus } : {}),
+      ...(assetType ? { assetType } : {}),
+      ...(assignedToId ? { assignedToId } : {}),
+    };
+
+    const [total, data] = await Promise.all([
+      this.prisma.asset.count({ where }),
+      this.prisma.asset.findMany({
+        where,
+        include: { assignedTo: { select: userSelect } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
-  update(id: number, updateAssetDto: UpdateAssetDto) {
-    return `This action updates a #${id} asset`;
+  async findOne(id: string) {
+    const asset = await this.prisma.asset.findUnique({
+      where: { id },
+      include: {
+        assignedTo: { select: userSelect },
+        assetAssignments: {
+          include: {
+            assignedBy: { select: userSelect },
+            assignedTo: { select: userSelect },
+          },
+          orderBy: { assignedAt: 'desc' },
+        },
+      },
+    });
+
+    if (!asset) throw new NotFoundException(`Asset ${id} not found`);
+    return asset;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} asset`;
+  async update(id: string, dto: UpdateAssetDto) {
+    await this.ensureAssetExists(id);
+
+    // Removed the bad logic block that forced assetStatus!
+    return this.prisma.asset.update({
+      where: { id },
+      data: dto, // Now handles partial updates perfectly
+      include: { assignedTo: { select: userSelect } },
+    });
+  }
+
+  async assign(id: string, dto: AssignAssetDto) {
+    return this.prisma.$transaction(async (tx) => {
+      const asset = await tx.asset.findUnique({ where: { id } });
+      if (!asset) throw new NotFoundException('Asset not found');
+
+      // Verify users exist
+      const assignedBy = await tx.user.findUnique({
+        where: { id: dto.assignedById },
+      });
+      if (!assignedBy)
+        throw new BadRequestException('assignedById user not found');
+
+      const assignedTo = await tx.user.findUnique({
+        where: { id: dto.assignedToId },
+      });
+      if (!assignedTo)
+        throw new BadRequestException('assignedToId user not found');
+
+      // Update asset and add history log
+      const updatedAsset = await tx.asset.update({
+        where: { id },
+        data: {
+          assignedToId: dto.assignedToId,
+          assignedDate: new Date(),
+          assetStatus: AssetStatus.ASSIGNED,
+        },
+        include: { assignedTo: { select: userSelect } },
+      });
+
+      await tx.assetAssignment.create({
+        data: {
+          assetId: id,
+          assignedById: dto.assignedById,
+          assignedToId: dto.assignedToId,
+        },
+      });
+
+      return updatedAsset;
+    });
+  }
+
+  async remove(id: string) {
+    await this.ensureAssetExists(id);
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.assetAssignment.deleteMany({ where: { assetId: id } });
+      return tx.asset.delete({ where: { id } });
+    });
+  }
+
+  private async ensureAssetExists(id: string) {
+    const asset = await this.prisma.asset.findUnique({ where: { id } });
+    if (!asset) throw new NotFoundException('Asset not found');
   }
 }
