@@ -13,15 +13,13 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
-//////////////////////
-// ENUMS
-//////////////////////
+// Enums
 
 enum Role {
   EMPLOYEE
   HR
   IT
-  ADMIN
+  ADMIN 
 }
 
 enum TicketStatus {
@@ -48,9 +46,7 @@ enum AssetStatus {
   RETIRED
 }
 
-//////////////////////
-// USERS (AUTH)
-//////////////////////
+// Users(Authenticate)
 
 model User {
   id        String   @id @default(nanoid(10))
@@ -72,9 +68,7 @@ model User {
   @@index([role])
 }
 
-//////////////////////
-// TICKETS
-//////////////////////
+// Tickets
 
 model Ticket {
   id          String         @id @default(nanoid(10))
@@ -89,11 +83,11 @@ model Ticket {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // 🔹 creator
+// creator
   createdById String
   createdBy   User @relation("TicketCreator", fields: [createdById], references: [id])
 
-  // 🔹 assignee (HR or IT)
+// assignee (HR or IT)
   assignedToId String?
   assignedTo   User? @relation("TicketAssignee", fields: [assignedToId], references: [id])
 
@@ -104,13 +98,11 @@ model Ticket {
   @@index([assignedToId])
 }
 
-//////////////////////
-// ASSETS (MINIMAL)
-//////////////////////
+// ASSETS
 
 model Asset {
   id            String      @id @default(uuid())
-  serialNumber  String      @unique // human readable like AST-001
+  serialNumber  String      @unique 
   assetName     String
   assetType     String
   assetStatus   AssetStatus @default(AVAILABLE)
