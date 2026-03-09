@@ -19,7 +19,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   @Transform(({ value }: { value: any }) =>
     (value as string)?.trim().toLowerCase(),
-  ) 
+  )
   email: string;
 
   @IsString()
