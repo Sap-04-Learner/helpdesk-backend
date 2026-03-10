@@ -7,16 +7,18 @@ import { PrismaService } from '../../prisma.service';
 import { AssetStatus } from 'src/generated/prisma/enums';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
-import { AssignAssetDto } from './dto/assign-asset.dto';
 import { FilterAssetDto } from './dto/filter-asset.dto';
 import { Prisma } from 'src/generated/prisma/client';
+import { AssignAssetDto } from './dto/assign-asset.dto';
 
-// DRY & Secure: Never return passwords in related queries
 const userSelect = {
   id: true,
   name: true,
   email: true,
   role: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true,
 };
 
 @Injectable()
@@ -61,7 +63,7 @@ export class AssetsService {
       assetType,
       assignedToId,
       page = 1,
-      limit = 10,
+      limit = 100,
     } = filter;
     const skip = (page - 1) * limit;
 

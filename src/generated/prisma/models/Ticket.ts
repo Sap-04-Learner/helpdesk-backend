@@ -232,7 +232,7 @@ export type TicketWhereInput = {
   assignedToId?: Prisma.StringNullableFilter<"Ticket"> | string | null
   createdBy?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   assignedTo?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
-  assetRequest?: Prisma.XOR<Prisma.AssetRequestNullableScalarRelationFilter, Prisma.AssetRequestWhereInput> | null
+  assetIssue?: Prisma.XOR<Prisma.AssetIssueNullableScalarRelationFilter, Prisma.AssetIssueWhereInput> | null
 }
 
 export type TicketOrderByWithRelationInput = {
@@ -249,7 +249,7 @@ export type TicketOrderByWithRelationInput = {
   assignedToId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdBy?: Prisma.UserOrderByWithRelationInput
   assignedTo?: Prisma.UserOrderByWithRelationInput
-  assetRequest?: Prisma.AssetRequestOrderByWithRelationInput
+  assetIssue?: Prisma.AssetIssueOrderByWithRelationInput
 }
 
 export type TicketWhereUniqueInput = Prisma.AtLeast<{
@@ -269,7 +269,7 @@ export type TicketWhereUniqueInput = Prisma.AtLeast<{
   assignedToId?: Prisma.StringNullableFilter<"Ticket"> | string | null
   createdBy?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   assignedTo?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
-  assetRequest?: Prisma.XOR<Prisma.AssetRequestNullableScalarRelationFilter, Prisma.AssetRequestWhereInput> | null
+  assetIssue?: Prisma.XOR<Prisma.AssetIssueNullableScalarRelationFilter, Prisma.AssetIssueWhereInput> | null
 }, "id">
 
 export type TicketOrderByWithAggregationInput = {
@@ -318,7 +318,7 @@ export type TicketCreateInput = {
   updatedAt?: Date | string
   createdBy: Prisma.UserCreateNestedOneWithoutTicketsCreatedInput
   assignedTo?: Prisma.UserCreateNestedOneWithoutTicketsAssignedInput
-  assetRequest?: Prisma.AssetRequestCreateNestedOneWithoutTicketInput
+  assetIssue?: Prisma.AssetIssueCreateNestedOneWithoutTicketInput
 }
 
 export type TicketUncheckedCreateInput = {
@@ -333,7 +333,7 @@ export type TicketUncheckedCreateInput = {
   updatedAt?: Date | string
   createdById: string
   assignedToId?: string | null
-  assetRequest?: Prisma.AssetRequestUncheckedCreateNestedOneWithoutTicketInput
+  assetIssue?: Prisma.AssetIssueUncheckedCreateNestedOneWithoutTicketInput
 }
 
 export type TicketUpdateInput = {
@@ -348,7 +348,7 @@ export type TicketUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.UserUpdateOneRequiredWithoutTicketsCreatedNestedInput
   assignedTo?: Prisma.UserUpdateOneWithoutTicketsAssignedNestedInput
-  assetRequest?: Prisma.AssetRequestUpdateOneWithoutTicketNestedInput
+  assetIssue?: Prisma.AssetIssueUpdateOneWithoutTicketNestedInput
 }
 
 export type TicketUncheckedUpdateInput = {
@@ -363,7 +363,7 @@ export type TicketUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdById?: Prisma.StringFieldUpdateOperationsInput | string
   assignedToId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  assetRequest?: Prisma.AssetRequestUncheckedUpdateOneWithoutTicketNestedInput
+  assetIssue?: Prisma.AssetIssueUncheckedUpdateOneWithoutTicketNestedInput
 }
 
 export type TicketCreateManyInput = {
@@ -563,18 +563,18 @@ export type EnumDepartmentFieldUpdateOperationsInput = {
   set?: $Enums.Department
 }
 
-export type TicketCreateNestedOneWithoutAssetRequestInput = {
-  create?: Prisma.XOR<Prisma.TicketCreateWithoutAssetRequestInput, Prisma.TicketUncheckedCreateWithoutAssetRequestInput>
-  connectOrCreate?: Prisma.TicketCreateOrConnectWithoutAssetRequestInput
+export type TicketCreateNestedOneWithoutAssetIssueInput = {
+  create?: Prisma.XOR<Prisma.TicketCreateWithoutAssetIssueInput, Prisma.TicketUncheckedCreateWithoutAssetIssueInput>
+  connectOrCreate?: Prisma.TicketCreateOrConnectWithoutAssetIssueInput
   connect?: Prisma.TicketWhereUniqueInput
 }
 
-export type TicketUpdateOneRequiredWithoutAssetRequestNestedInput = {
-  create?: Prisma.XOR<Prisma.TicketCreateWithoutAssetRequestInput, Prisma.TicketUncheckedCreateWithoutAssetRequestInput>
-  connectOrCreate?: Prisma.TicketCreateOrConnectWithoutAssetRequestInput
-  upsert?: Prisma.TicketUpsertWithoutAssetRequestInput
+export type TicketUpdateOneRequiredWithoutAssetIssueNestedInput = {
+  create?: Prisma.XOR<Prisma.TicketCreateWithoutAssetIssueInput, Prisma.TicketUncheckedCreateWithoutAssetIssueInput>
+  connectOrCreate?: Prisma.TicketCreateOrConnectWithoutAssetIssueInput
+  upsert?: Prisma.TicketUpsertWithoutAssetIssueInput
   connect?: Prisma.TicketWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.TicketUpdateToOneWithWhereWithoutAssetRequestInput, Prisma.TicketUpdateWithoutAssetRequestInput>, Prisma.TicketUncheckedUpdateWithoutAssetRequestInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TicketUpdateToOneWithWhereWithoutAssetIssueInput, Prisma.TicketUpdateWithoutAssetIssueInput>, Prisma.TicketUncheckedUpdateWithoutAssetIssueInput>
 }
 
 export type TicketCreateWithoutCreatedByInput = {
@@ -588,7 +588,7 @@ export type TicketCreateWithoutCreatedByInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   assignedTo?: Prisma.UserCreateNestedOneWithoutTicketsAssignedInput
-  assetRequest?: Prisma.AssetRequestCreateNestedOneWithoutTicketInput
+  assetIssue?: Prisma.AssetIssueCreateNestedOneWithoutTicketInput
 }
 
 export type TicketUncheckedCreateWithoutCreatedByInput = {
@@ -602,7 +602,7 @@ export type TicketUncheckedCreateWithoutCreatedByInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   assignedToId?: string | null
-  assetRequest?: Prisma.AssetRequestUncheckedCreateNestedOneWithoutTicketInput
+  assetIssue?: Prisma.AssetIssueUncheckedCreateNestedOneWithoutTicketInput
 }
 
 export type TicketCreateOrConnectWithoutCreatedByInput = {
@@ -626,7 +626,7 @@ export type TicketCreateWithoutAssignedToInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   createdBy: Prisma.UserCreateNestedOneWithoutTicketsCreatedInput
-  assetRequest?: Prisma.AssetRequestCreateNestedOneWithoutTicketInput
+  assetIssue?: Prisma.AssetIssueCreateNestedOneWithoutTicketInput
 }
 
 export type TicketUncheckedCreateWithoutAssignedToInput = {
@@ -640,7 +640,7 @@ export type TicketUncheckedCreateWithoutAssignedToInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   createdById: string
-  assetRequest?: Prisma.AssetRequestUncheckedCreateNestedOneWithoutTicketInput
+  assetIssue?: Prisma.AssetIssueUncheckedCreateNestedOneWithoutTicketInput
 }
 
 export type TicketCreateOrConnectWithoutAssignedToInput = {
@@ -702,7 +702,7 @@ export type TicketUpdateManyWithWhereWithoutAssignedToInput = {
   data: Prisma.XOR<Prisma.TicketUpdateManyMutationInput, Prisma.TicketUncheckedUpdateManyWithoutAssignedToInput>
 }
 
-export type TicketCreateWithoutAssetRequestInput = {
+export type TicketCreateWithoutAssetIssueInput = {
   id?: string
   title: string
   summary: string
@@ -716,7 +716,7 @@ export type TicketCreateWithoutAssetRequestInput = {
   assignedTo?: Prisma.UserCreateNestedOneWithoutTicketsAssignedInput
 }
 
-export type TicketUncheckedCreateWithoutAssetRequestInput = {
+export type TicketUncheckedCreateWithoutAssetIssueInput = {
   id?: string
   title: string
   summary: string
@@ -730,23 +730,23 @@ export type TicketUncheckedCreateWithoutAssetRequestInput = {
   assignedToId?: string | null
 }
 
-export type TicketCreateOrConnectWithoutAssetRequestInput = {
+export type TicketCreateOrConnectWithoutAssetIssueInput = {
   where: Prisma.TicketWhereUniqueInput
-  create: Prisma.XOR<Prisma.TicketCreateWithoutAssetRequestInput, Prisma.TicketUncheckedCreateWithoutAssetRequestInput>
+  create: Prisma.XOR<Prisma.TicketCreateWithoutAssetIssueInput, Prisma.TicketUncheckedCreateWithoutAssetIssueInput>
 }
 
-export type TicketUpsertWithoutAssetRequestInput = {
-  update: Prisma.XOR<Prisma.TicketUpdateWithoutAssetRequestInput, Prisma.TicketUncheckedUpdateWithoutAssetRequestInput>
-  create: Prisma.XOR<Prisma.TicketCreateWithoutAssetRequestInput, Prisma.TicketUncheckedCreateWithoutAssetRequestInput>
+export type TicketUpsertWithoutAssetIssueInput = {
+  update: Prisma.XOR<Prisma.TicketUpdateWithoutAssetIssueInput, Prisma.TicketUncheckedUpdateWithoutAssetIssueInput>
+  create: Prisma.XOR<Prisma.TicketCreateWithoutAssetIssueInput, Prisma.TicketUncheckedCreateWithoutAssetIssueInput>
   where?: Prisma.TicketWhereInput
 }
 
-export type TicketUpdateToOneWithWhereWithoutAssetRequestInput = {
+export type TicketUpdateToOneWithWhereWithoutAssetIssueInput = {
   where?: Prisma.TicketWhereInput
-  data: Prisma.XOR<Prisma.TicketUpdateWithoutAssetRequestInput, Prisma.TicketUncheckedUpdateWithoutAssetRequestInput>
+  data: Prisma.XOR<Prisma.TicketUpdateWithoutAssetIssueInput, Prisma.TicketUncheckedUpdateWithoutAssetIssueInput>
 }
 
-export type TicketUpdateWithoutAssetRequestInput = {
+export type TicketUpdateWithoutAssetIssueInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   summary?: Prisma.StringFieldUpdateOperationsInput | string
@@ -760,7 +760,7 @@ export type TicketUpdateWithoutAssetRequestInput = {
   assignedTo?: Prisma.UserUpdateOneWithoutTicketsAssignedNestedInput
 }
 
-export type TicketUncheckedUpdateWithoutAssetRequestInput = {
+export type TicketUncheckedUpdateWithoutAssetIssueInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   summary?: Prisma.StringFieldUpdateOperationsInput | string
@@ -811,7 +811,7 @@ export type TicketUpdateWithoutCreatedByInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignedTo?: Prisma.UserUpdateOneWithoutTicketsAssignedNestedInput
-  assetRequest?: Prisma.AssetRequestUpdateOneWithoutTicketNestedInput
+  assetIssue?: Prisma.AssetIssueUpdateOneWithoutTicketNestedInput
 }
 
 export type TicketUncheckedUpdateWithoutCreatedByInput = {
@@ -825,7 +825,7 @@ export type TicketUncheckedUpdateWithoutCreatedByInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignedToId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  assetRequest?: Prisma.AssetRequestUncheckedUpdateOneWithoutTicketNestedInput
+  assetIssue?: Prisma.AssetIssueUncheckedUpdateOneWithoutTicketNestedInput
 }
 
 export type TicketUncheckedUpdateManyWithoutCreatedByInput = {
@@ -852,7 +852,7 @@ export type TicketUpdateWithoutAssignedToInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.UserUpdateOneRequiredWithoutTicketsCreatedNestedInput
-  assetRequest?: Prisma.AssetRequestUpdateOneWithoutTicketNestedInput
+  assetIssue?: Prisma.AssetIssueUpdateOneWithoutTicketNestedInput
 }
 
 export type TicketUncheckedUpdateWithoutAssignedToInput = {
@@ -866,7 +866,7 @@ export type TicketUncheckedUpdateWithoutAssignedToInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdById?: Prisma.StringFieldUpdateOperationsInput | string
-  assetRequest?: Prisma.AssetRequestUncheckedUpdateOneWithoutTicketNestedInput
+  assetIssue?: Prisma.AssetIssueUncheckedUpdateOneWithoutTicketNestedInput
 }
 
 export type TicketUncheckedUpdateManyWithoutAssignedToInput = {
@@ -898,7 +898,7 @@ export type TicketSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   assignedToId?: boolean
   createdBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   assignedTo?: boolean | Prisma.Ticket$assignedToArgs<ExtArgs>
-  assetRequest?: boolean | Prisma.Ticket$assetRequestArgs<ExtArgs>
+  assetIssue?: boolean | Prisma.Ticket$assetIssueArgs<ExtArgs>
 }, ExtArgs["result"]["ticket"]>
 
 export type TicketSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -951,7 +951,7 @@ export type TicketOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
 export type TicketInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   createdBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   assignedTo?: boolean | Prisma.Ticket$assignedToArgs<ExtArgs>
-  assetRequest?: boolean | Prisma.Ticket$assetRequestArgs<ExtArgs>
+  assetIssue?: boolean | Prisma.Ticket$assetIssueArgs<ExtArgs>
 }
 export type TicketIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   createdBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -967,7 +967,7 @@ export type $TicketPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   objects: {
     createdBy: Prisma.$UserPayload<ExtArgs>
     assignedTo: Prisma.$UserPayload<ExtArgs> | null
-    assetRequest: Prisma.$AssetRequestPayload<ExtArgs> | null
+    assetIssue: Prisma.$AssetIssuePayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1377,7 +1377,7 @@ export interface Prisma__TicketClient<T, Null = never, ExtArgs extends runtime.T
   readonly [Symbol.toStringTag]: "PrismaPromise"
   createdBy<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   assignedTo<T extends Prisma.Ticket$assignedToArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Ticket$assignedToArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  assetRequest<T extends Prisma.Ticket$assetRequestArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Ticket$assetRequestArgs<ExtArgs>>): Prisma.Prisma__AssetRequestClient<runtime.Types.Result.GetResult<Prisma.$AssetRequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  assetIssue<T extends Prisma.Ticket$assetIssueArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Ticket$assetIssueArgs<ExtArgs>>): Prisma.Prisma__AssetIssueClient<runtime.Types.Result.GetResult<Prisma.$AssetIssuePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1833,22 +1833,22 @@ export type Ticket$assignedToArgs<ExtArgs extends runtime.Types.Extensions.Inter
 }
 
 /**
- * Ticket.assetRequest
+ * Ticket.assetIssue
  */
-export type Ticket$assetRequestArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Ticket$assetIssueArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the AssetRequest
+   * Select specific fields to fetch from the AssetIssue
    */
-  select?: Prisma.AssetRequestSelect<ExtArgs> | null
+  select?: Prisma.AssetIssueSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the AssetRequest
+   * Omit specific fields from the AssetIssue
    */
-  omit?: Prisma.AssetRequestOmit<ExtArgs> | null
+  omit?: Prisma.AssetIssueOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.AssetRequestInclude<ExtArgs> | null
-  where?: Prisma.AssetRequestWhereInput
+  include?: Prisma.AssetIssueInclude<ExtArgs> | null
+  where?: Prisma.AssetIssueWhereInput
 }
 
 /**

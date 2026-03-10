@@ -7,11 +7,9 @@ import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
-    UsersModule,
     PassportModule,
     JwtModule.register({
-      secret:
-        process.env.JWT_SECRET || 'super-secret-key-change-this-in-production',
+      secret: process.env.JWT_SECRET || 'company-auth-for-jwt',
       signOptions: { expiresIn: '1d' }, // Token expires in 1 day
     }),
   ],

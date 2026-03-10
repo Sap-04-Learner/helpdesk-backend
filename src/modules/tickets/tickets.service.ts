@@ -4,19 +4,118 @@ import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { GetTicketsFilterDto } from './dto/filter-ticket.dto';
 import { TicketStatus } from 'src/generated/prisma/enums';
-
-// DRY: Reusable include object for relations. Keeps passwords hidden!
-const ticketInclude = {
-  createdBy: { select: { id: true, name: true, email: true, role: true } },
-  assignedTo: { select: { id: true, name: true, email: true, role: true } },
-};
+import { AssetsService } from '../assets/assets.service';
 
 @Injectable()
 export class TicketsService {
-  constructor(private prisma: PrismaService) {}
+  private ticketInclude = {
+    createdBy: { select: { id: true, name: true, email: true, role: true } },
+    assignedTo: { select: { id: true, name: true, email: true, role: true } },
+    assetIssue: {
+      include: {
+        asset: true,
+      },
+    },
+  };
+
+  constructor(
+    private prisma: PrismaService,
+    private assetsService: AssetsService,
+  ) {}
+
+  private normalizeRole(role?: string | null) {
+    if (!role) return role;
+    if (role === 'It_ADMIN') return 'IT_ADMIN';
+    if (role === 'IT') return 'IT_SUPPORT';
+    return role;
+  }
+
+  private hasText(value?: string | null): boolean {
+    return typeof value === 'string' && value.trim().length > 0;
+  }
+
+  private deriveIssueType(ticket: {
+    assetIssue?: {
+      assetId?: string | null;
+      assetCategory?: string | null;
+      assetClassification?: string | null;
+      requestedAssetName?: string | null;
+    } | null;
+  }): 'GENERAL' | 'ASSET_REQUEST' | 'ASSET_PROBLEM' {
+    const issue = ticket.assetIssue;
+    if (!issue) return 'GENERAL';
+
+    const category = issue.assetCategory?.trim().toUpperCase();
+    if (category === 'ASSET_PROBLEM') return 'ASSET_PROBLEM';
+    if (category === 'ASSET_REQUEST') return 'ASSET_REQUEST';
+
+    const hasAssetId = this.hasText(issue.assetId);
+    const hasRequestedAssetName = this.hasText(issue.requestedAssetName);
+    const hasCategory = this.hasText(issue.assetCategory);
+    const hasClassification = this.hasText(issue.assetClassification);
+
+    // Matches the workflow rule: existing asset reference means this is a problem ticket.
+    if (hasAssetId && hasRequestedAssetName && hasCategory && hasClassification) {
+      return 'ASSET_PROBLEM';
+    }
+
+    // Matches the workflow rule: no assetId but request details means this is an asset request.
+    if (!hasAssetId && hasRequestedAssetName && hasCategory && hasClassification) {
+      return 'ASSET_REQUEST';
+    }
+
+    if (hasAssetId) return 'ASSET_PROBLEM';
+    if (hasRequestedAssetName) return 'ASSET_REQUEST';
+    return 'GENERAL';
+  }
+
+  private normalizeTicketResponse(ticket: any) {
+    const issueType = this.deriveIssueType(ticket);
+
+    const normalizedTicket = {
+      ...ticket,
+      issueType,
+      createdBy: ticket.createdBy
+        ? {
+            ...ticket.createdBy,
+            role: this.normalizeRole(ticket.createdBy.role),
+          }
+        : ticket.createdBy,
+      assignedTo: ticket.assignedTo
+        ? {
+            ...ticket.assignedTo,
+            role: this.normalizeRole(ticket.assignedTo.role),
+          }
+        : ticket.assignedTo,
+    };
+
+    if (!normalizedTicket.assetIssue) {
+      const { assetIssue, ...ticketWithoutAssetIssue } = normalizedTicket;
+      return ticketWithoutAssetIssue;
+    }
+
+    return normalizedTicket;
+  }
+
+  private mapAssetIssueInput(dto: {
+    assetIssue?: {
+      assetId?: string | null;
+      assetCategory?: string | null;
+      assetClassification?: 'NETWORK' | 'SOFTWARE' | 'HARDWARE' | null;
+      requestedAssetName?: string | null;
+    } | null;
+  }) {
+    return dto.assetIssue;
+  }
 
   async create(dto: CreateTicketDto) {
-    return this.prisma.ticket.create({
+    const assetIssue = this.mapAssetIssueInput(dto);
+
+    if (assetIssue?.assetId) {
+      await this.assetsService.findOne(assetIssue.assetId);
+    }
+
+    const created = await this.prisma.ticket.create({
       data: {
         title: dto.title,
         summary: dto.summary,
@@ -25,19 +124,35 @@ export class TicketsService {
         imageUrl: dto.imageUrl,
         createdById: dto.createdById,
         assignedToId: dto.assignedToId,
+        ...(assetIssue
+          ? {
+              assetIssue: {
+                create: {
+                  assetId: assetIssue.assetId ?? null,
+                  assetCategory: assetIssue.assetCategory ?? null,
+                  assetClassification: assetIssue.assetClassification ?? null,
+                  requestedAssetName: assetIssue.requestedAssetName ?? null,
+                },
+              },
+            }
+          : {}),
       },
-      include: ticketInclude,
+      include: this.ticketInclude,
     });
+
+    return this.normalizeTicketResponse(created);
   }
 
   async getMyTickets(userId: string) {
-    return this.prisma.ticket.findMany({
+    const tickets = await this.prisma.ticket.findMany({
       where: {
         OR: [{ createdById: userId }, { assignedToId: userId }],
       },
-      include: ticketInclude,
+      include: this.ticketInclude,
       orderBy: { createdAt: 'desc' },
     });
+
+    return tickets.map((ticket) => this.normalizeTicketResponse(ticket));
   }
 
   // Upgraded to handle advanced filtering and pagination for the frontend
@@ -58,7 +173,7 @@ export class TicketsService {
       this.prisma.ticket.count({ where: whereClause }),
       this.prisma.ticket.findMany({
         where: whereClause,
-        include: ticketInclude,
+        include: this.ticketInclude,
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
@@ -67,7 +182,7 @@ export class TicketsService {
 
     // Return data alongside pagination metadata for Next.js tables
     return {
-      data,
+      data: data.map((ticket) => this.normalizeTicketResponse(ticket)),
       meta: {
         total,
         page,
@@ -80,36 +195,81 @@ export class TicketsService {
   async findOne(id: string) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
-      include: ticketInclude,
+      include: this.ticketInclude,
     });
 
     if (!ticket) throw new NotFoundException(`Ticket ${id} not found`);
-    return ticket;
+    return this.normalizeTicketResponse(ticket);
   }
 
   async update(id: string, dto: UpdateTicketDto) {
-    await this.findOne(id); // Ensure existence
-    return this.prisma.ticket.update({
+    const existing = await this.findOne(id);
+    const assetIssue = this.mapAssetIssueInput(dto);
+    const updated = await this.prisma.ticket.update({
       where: { id },
-      data: dto,
-      include: ticketInclude,
+      data: {
+        title: dto.title,
+        summary: dto.summary,
+        department: dto.department,
+        priority: dto.priority,
+        imageUrl: dto.imageUrl,
+        createdById: dto.createdById,
+        assignedToId: dto.assignedToId,
+        status: dto.status,
+        ...(assetIssue !== undefined
+          ? assetIssue === null
+            ? existing.assetIssue
+              ? { assetIssue: { delete: true } }
+              : {}
+            : {
+                assetIssue: {
+                  upsert: {
+                    create: {
+                      assetId: assetIssue.assetId ?? null,
+                      assetCategory: assetIssue.assetCategory ?? null,
+                      assetClassification: assetIssue.assetClassification ?? null,
+                      requestedAssetName: assetIssue.requestedAssetName ?? null,
+                    },
+                    update: {
+                      assetId: assetIssue.assetId ?? null,
+                      assetCategory: assetIssue.assetCategory ?? null,
+                      assetClassification: assetIssue.assetClassification ?? null,
+                      requestedAssetName: assetIssue.requestedAssetName ?? null,
+                    },
+                  },
+                },
+              }
+          : {}),
+      },
+      include: this.ticketInclude,
     });
+
+    return this.normalizeTicketResponse(updated);
   }
 
   async updateStatus(id: string, status: TicketStatus) {
     await this.findOne(id); // Ensure existence
-    return this.prisma.ticket.update({
+    const updated = await this.prisma.ticket.update({
       where: { id },
       data: { status },
-      include: ticketInclude, // Returning the relations is helpful for frontend UI updates
+      include: this.ticketInclude, // Returning the relations is helpful for frontend UI updates
     });
+
+    return this.normalizeTicketResponse(updated);
   }
 
   async remove(id: string) {
     await this.findOne(id); // Ensure existence
-    return this.prisma.ticket.delete({
+    const removed = await this.prisma.ticket.delete({
       where: { id },
-      include: ticketInclude, // Return deleted data in case frontend needs it for undo toast
+      include: this.ticketInclude, // Return deleted data in case frontend needs it for undo toast
     });
+
+    return this.normalizeTicketResponse(removed);
+  }
+
+  private async ensureTicketExists(id: string) {
+    const ticket = await this.prisma.ticket.findUnique({ where: { id } });
+    if (!ticket) throw new NotFoundException(`Ticket ${id} not found`);
   }
 }

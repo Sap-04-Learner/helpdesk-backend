@@ -28,10 +28,10 @@ export type User = Prisma.UserModel
  */
 export type Ticket = Prisma.TicketModel
 /**
- * Model AssetRequest
+ * Model AssetIssue
  * 
  */
-export type AssetRequest = Prisma.AssetRequestModel
+export type AssetIssue = Prisma.AssetIssueModel
 /**
  * Model Asset
  * 

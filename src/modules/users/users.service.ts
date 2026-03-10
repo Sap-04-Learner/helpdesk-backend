@@ -23,6 +23,27 @@ const userSelect = {
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
+  private normalizeRole(role?: string | null) {
+    if (!role) return role;
+    if (role === 'It_ADMIN') return 'IT_ADMIN';
+    if (role === 'IT') return 'IT_SUPPORT';
+    return role;
+  }
+
+  private mapRoleFilter(role?: string): Role | undefined {
+    if (!role) return undefined;
+    if (role === 'IT_ADMIN') return 'It_ADMIN' as Role;
+    if (role === 'IT') return 'IT_SUPPORT' as Role;
+    return role as Role;
+  }
+
+  private mapUserResponse<T extends { role?: string | null }>(user: T): T {
+    return {
+      ...user,
+      role: this.normalizeRole(user.role),
+    };
+  }
+
   async create(dto: CreateUserDto) {
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -42,8 +63,10 @@ export class UsersService {
   }
 
   async findAll(role?: string) {
+    const normalizedRole = this.mapRoleFilter(role);
+
     return this.prisma.user.findMany({
-      where: role ? { role: role as Role } : undefined,
+      where: normalizedRole ? { role: normalizedRole } : undefined,
       select: userSelect,
       orderBy: { createdAt: 'desc' },
     });
@@ -56,7 +79,7 @@ export class UsersService {
     });
 
     if (!user) throw new NotFoundException(`User ${id} not found`);
-    return user;
+    return this.mapUserResponse(user);
   }
 
   async toggleActive(id: string) {

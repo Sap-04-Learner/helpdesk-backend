@@ -386,7 +386,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   Ticket: 'Ticket',
-  AssetRequest: 'AssetRequest',
+  AssetIssue: 'AssetIssue',
   Asset: 'Asset',
   AssetAssignment: 'AssetAssignment'
 } as const
@@ -404,7 +404,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "ticket" | "assetRequest" | "asset" | "assetAssignment"
+    modelProps: "user" | "ticket" | "assetIssue" | "asset" | "assetAssignment"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -556,77 +556,77 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    AssetRequest: {
-      payload: Prisma.$AssetRequestPayload<ExtArgs>
-      fields: Prisma.AssetRequestFieldRefs
+    AssetIssue: {
+      payload: Prisma.$AssetIssuePayload<ExtArgs>
+      fields: Prisma.AssetIssueFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.AssetRequestFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRequestPayload> | null
+          args: Prisma.AssetIssueFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetIssuePayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.AssetRequestFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRequestPayload>
+          args: Prisma.AssetIssueFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetIssuePayload>
         }
         findFirst: {
-          args: Prisma.AssetRequestFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRequestPayload> | null
+          args: Prisma.AssetIssueFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetIssuePayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.AssetRequestFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRequestPayload>
+          args: Prisma.AssetIssueFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetIssuePayload>
         }
         findMany: {
-          args: Prisma.AssetRequestFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRequestPayload>[]
+          args: Prisma.AssetIssueFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetIssuePayload>[]
         }
         create: {
-          args: Prisma.AssetRequestCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRequestPayload>
+          args: Prisma.AssetIssueCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetIssuePayload>
         }
         createMany: {
-          args: Prisma.AssetRequestCreateManyArgs<ExtArgs>
+          args: Prisma.AssetIssueCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.AssetRequestCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRequestPayload>[]
+          args: Prisma.AssetIssueCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetIssuePayload>[]
         }
         delete: {
-          args: Prisma.AssetRequestDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRequestPayload>
+          args: Prisma.AssetIssueDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetIssuePayload>
         }
         update: {
-          args: Prisma.AssetRequestUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRequestPayload>
+          args: Prisma.AssetIssueUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetIssuePayload>
         }
         deleteMany: {
-          args: Prisma.AssetRequestDeleteManyArgs<ExtArgs>
+          args: Prisma.AssetIssueDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.AssetRequestUpdateManyArgs<ExtArgs>
+          args: Prisma.AssetIssueUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.AssetRequestUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRequestPayload>[]
+          args: Prisma.AssetIssueUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetIssuePayload>[]
         }
         upsert: {
-          args: Prisma.AssetRequestUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRequestPayload>
+          args: Prisma.AssetIssueUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetIssuePayload>
         }
         aggregate: {
-          args: Prisma.AssetRequestAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateAssetRequest>
+          args: Prisma.AssetIssueAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAssetIssue>
         }
         groupBy: {
-          args: Prisma.AssetRequestGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AssetRequestGroupByOutputType>[]
+          args: Prisma.AssetIssueGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AssetIssueGroupByOutputType>[]
         }
         count: {
-          args: Prisma.AssetRequestCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AssetRequestCountAggregateOutputType> | number
+          args: Prisma.AssetIssueCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AssetIssueCountAggregateOutputType> | number
         }
       }
     }
@@ -848,17 +848,18 @@ export const TicketScalarFieldEnum = {
 export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
 
 
-export const AssetRequestScalarFieldEnum = {
+export const AssetIssueScalarFieldEnum = {
   id: 'id',
   ticketId: 'ticketId',
   assetId: 'assetId',
   assetCategory: 'assetCategory',
   assetClassification: 'assetClassification',
+  requestedAssetName: 'requestedAssetName',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
-export type AssetRequestScalarFieldEnum = (typeof AssetRequestScalarFieldEnum)[keyof typeof AssetRequestScalarFieldEnum]
+export type AssetIssueScalarFieldEnum = (typeof AssetIssueScalarFieldEnum)[keyof typeof AssetIssueScalarFieldEnum]
 
 
 export const AssetScalarFieldEnum = {
@@ -1146,7 +1147,7 @@ export type PrismaClientOptions = ({
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   ticket?: Prisma.TicketOmit
-  assetRequest?: Prisma.AssetRequestOmit
+  assetIssue?: Prisma.AssetIssueOmit
   asset?: Prisma.AssetOmit
   assetAssignment?: Prisma.AssetAssignmentOmit
 }

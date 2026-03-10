@@ -53,7 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Ticket: 'Ticket',
-  AssetRequest: 'AssetRequest',
+  AssetIssue: 'AssetIssue',
   Asset: 'Asset',
   AssetAssignment: 'AssetAssignment'
 } as const
@@ -105,17 +105,18 @@ export const TicketScalarFieldEnum = {
 export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
 
 
-export const AssetRequestScalarFieldEnum = {
+export const AssetIssueScalarFieldEnum = {
   id: 'id',
   ticketId: 'ticketId',
   assetId: 'assetId',
   assetCategory: 'assetCategory',
   assetClassification: 'assetClassification',
+  requestedAssetName: 'requestedAssetName',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
-export type AssetRequestScalarFieldEnum = (typeof AssetRequestScalarFieldEnum)[keyof typeof AssetRequestScalarFieldEnum]
+export type AssetIssueScalarFieldEnum = (typeof AssetIssueScalarFieldEnum)[keyof typeof AssetIssueScalarFieldEnum]
 
 
 export const AssetScalarFieldEnum = {

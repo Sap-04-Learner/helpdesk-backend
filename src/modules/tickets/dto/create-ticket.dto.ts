@@ -4,8 +4,17 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  ValidateNested,
 } from 'class-validator';
-import { Department, TicketPriority } from 'src/generated/prisma/enums';
+import { Type } from 'class-transformer';
+import { Department, TicketPriority } from 'src/generated/prisma/client';
+import { AssetIssueDto } from './asset-ticket.dto';
+
+export enum TicketIssueTypeDto {
+  GENERAL = 'GENERAL',
+  ASSET_REQUEST = 'ASSET_REQUEST',
+  ASSET_PROBLEM = 'ASSET_PROBLEM',
+}
 
 export class CreateTicketDto {
   @IsString()
@@ -26,6 +35,15 @@ export class CreateTicketDto {
   @IsOptional()
   @IsUrl({}, { message: 'Image must be a valid URL' })
   imageUrl?: string;
+
+  @IsOptional()
+  @IsEnum(TicketIssueTypeDto)
+  issueType?: TicketIssueTypeDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => AssetIssueDto)
+  assetIssue?: AssetIssueDto | null;
 
   @IsString()
   @IsNotEmpty()

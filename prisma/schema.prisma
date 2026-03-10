@@ -24,7 +24,7 @@ enum Role {
   EMPLOYEE
   HR
   IT_SUPPORT
-  IT_ADMIN // <-- FIXED TYPO HERE
+  IT_ADMIN
 }
 
 enum TicketStatus {
@@ -107,9 +107,7 @@ model Ticket {
   // 🔹 assignee (HR or IT)
   assignedToId String?
   assignedTo   User? @relation("TicketAssignee", fields: [assignedToId], references: [id])
-
-  // Optional one-to-one detail for asset request/problem tickets
-  assetRequest AssetRequest?
+  assetIssue AssetIssue?
 
   @@index([status])
   @@index([priority])
@@ -119,10 +117,10 @@ model Ticket {
 }
 
 //////////////////////
-// ASSET REQUESTS (Ticket-linked Details)
+// ASSET ISSUES (Ticket-linked Details)
 //////////////////////
 
-model AssetRequest {
+model AssetIssue {
   id                  String   @id @default(uuid())
 
   // One-to-one mapping with a ticket
@@ -134,6 +132,7 @@ model AssetRequest {
   asset               Asset?   @relation(fields: [assetId], references: [id])
   assetCategory       String?
   assetClassification String?
+  requestedAssetName String?
 
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -164,7 +163,7 @@ model Asset {
   @@index([assetType])
   @@index([assignedToId])
   assetAssignments AssetAssignment[]
-  assetRequests    AssetRequest[]
+  assetIssues    AssetIssue[]
 }
 
 //////////////////////
