@@ -2,7 +2,7 @@ import { IsIn, IsOptional, IsString } from 'class-validator';
 export class AssetIssueDto {
   @IsOptional()
   @IsString()
-  assetId?: string | null;
+  assetSerialNumber?: string | null;
 
   @IsOptional()
   @IsString()
