@@ -109,6 +109,7 @@ model Ticket {
   assignedTo   User? @relation("TicketAssignee", fields: [assignedToId], references: [id])
   assetIssue AssetIssue?
 
+
   @@index([status])
   @@index([priority])
   @@index([department])
