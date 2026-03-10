@@ -6,7 +6,9 @@ dotenv.config();
 @Injectable()
 export class PrismaService extends PrismaClient {
   constructor() {
-    const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:guna@localhost:5432/helpdesk'; 
+    const connectionString =
+      process.env.DATABASE_URL ||
+      'postgresql://postgres:guna@localhost:5432/helpdesk';
     const adapter = new PrismaPg({ connectionString });
     super({ adapter });
   }
