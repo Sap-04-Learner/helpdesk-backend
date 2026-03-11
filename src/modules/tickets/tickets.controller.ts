@@ -50,13 +50,13 @@ export class TicketsController {
     return this.ticketsService.findOne(id);
   }
 
-  @Roles(Role.HR, Role.IT_SUPPORT, Role.IT_ADMIN)
+  @Roles(Role.HR, Role.IT_SUPPORT, Role.IT_ADMIN, Role.EMPLOYEE)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTicketDto: UpdateTicketDto) {
     return this.ticketsService.update(id, updateTicketDto);
   }
 
-  @Roles(Role.HR, Role.IT_SUPPORT, Role.IT_ADMIN)
+  @Roles(Role.HR, Role.IT_SUPPORT, Role.IT_ADMIN, Role.EMPLOYEE)
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body('status') status: TicketStatus) {
     return this.ticketsService.updateStatus(id, status);
