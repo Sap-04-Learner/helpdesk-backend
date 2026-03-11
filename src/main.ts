@@ -17,7 +17,7 @@ async function bootstrap() {
       transform: true, // Automatically transforms payloads to DTO instances
     }),
   );
-
+  app.setGlobalPrefix('api');
   await app.listen(3001);
 }
 bootstrap();
